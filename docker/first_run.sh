@@ -1,4 +1,7 @@
 #!/bin/bash
+echo "setting proxy to http://10.158.3.59:8889/"
+export http_proxy="http://10.158.3.59:8889/"
+export https_proxy="http://10.158.3.59:8889/"
 
 echo "pip3 install -e /root/catkin_ws/src/self_supervised_segmentation ..."
 pip3 install -e /root/catkin_ws/src/self_supervised_segmentation > /dev/null

@@ -1,7 +1,8 @@
 #####################
 # Base image #
 #####################
-FROM nvidia/cuda:12.3.2-runtime-ubuntu20.04 as base
+# FROM nvidia/cuda:12.3.2-runtime-ubuntu20.04 as base
+FROM nvidia/cuda:11.6.2-cudnn8-devel-ubuntu20.04 as base
 
 # Labels
 LABEL maintainer="Matias Mattamala;Jonas Frey"
@@ -23,12 +24,15 @@ SHELL ["/bin/bash", "-c"]
 # ==
 # Install ROS
 # ==
+RUN sed -i 's/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list
+RUN sed -i 's/security.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list
+
 RUN apt update \
     && apt install --no-install-recommends -y curl gnupg lsb-release git build-essential nano \
-    && sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' \
+    && sh -c 'echo "deb http://mirrors.tuna.tsinghua.edu.cn/ros/ubuntu/ `lsb_release -cs` main" > /etc/apt/sources.list.d/ros-latest.list' \
     && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add - \
     && apt update \
-    && apt install --no-install-recommends -y ros-${ROS_VERSION}-desktop-full \
+    && apt install --no-install-recommends -y ros-noetic-desktop-full \
     && apt install --no-install-recommends -y \
         python3-pip \
         python3-venv \
@@ -38,8 +42,12 @@ RUN apt update \
         python3-wstool \
         python3-catkin-tools \
         python3-osrf-pycommon \
-    && rm -f "/etc/ros/rosdep/sources.list.d/20-default.list" \
-    && rosdep init \
+    && rm -f "/etc/ros/rosdep/sources.list.d/20-default.list" 
+#    && rosdep init \
+#    && rosdep update \
+#    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+    
+RUN rosdep init \
     && rosdep update \
     && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 
@@ -49,9 +57,13 @@ RUN apt update \
 RUN cd /root \
     && python3 -m venv env --system-site-packages \
     && source /root/env/bin/activate \
+    && pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple \
     && pip install --upgrade pip \
     && pip3 install --no-cache-dir \
-         torch==2.1.0 torchvision --extra-index-url https://download.pytorch.org/whl/cu121 \
+#         torch==2.1.0 torchvision --extra-index-url https://download.pytorch.org/whl/cu121 \
+         torch==2.1.0 torchvision --extra-index-url https://download.pytorch.org/whl/cu118  
+                
+RUN cd /root \
     && pip3 install --no-cache-dir \
          black \
          flake8 \
